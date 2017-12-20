@@ -1,10 +1,7 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
-using Inquisition.Data;
-using Inquisition.Modules;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -15,8 +12,6 @@ namespace Inquisition.Handlers
         private DiscordSocketClient Client;
         private CommandService Commands;
         private IServiceProvider Services;
-
-        string logFilePath;
 
         public CommandHandler(DiscordSocketClient c)
         {
@@ -31,20 +26,6 @@ namespace Inquisition.Handlers
 
             Commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
-            Directory.CreateDirectory("Data/Logs");
-
-            logFilePath = String.Format("Data/Logs/{0:yyyy-MM-dd}.log", DateTime.Now);
-
-            if (!File.Exists(logFilePath))
-            {
-                Console.WriteLine($"Creating log file {logFilePath}...");
-                File.Create(logFilePath);
-                Task.Delay(2000);
-                Console.WriteLine("Done.");
-            }
-
-            HelpModule.Create(Commands);
-
             Client.MessageReceived += HandleCommands;
         }
 
@@ -54,18 +35,6 @@ namespace Inquisition.Handlers
 
             if (message is null || message.Author.IsBot)
                 return;
-
-            User localUser = DatabaseHandler.GetFromDb(msg.Author);
-
-            if (localUser is null)
-            {
-                DatabaseHandler.AddToDb(localUser);
-            }
-
-            using (StreamWriter sw = new StreamWriter(logFilePath, true))
-            {
-                sw.WriteLine($"{msg.Channel} | {msg.Author}: {msg.Content}");
-            }
 
             string prefix = "rip ";
 
